@@ -11,16 +11,16 @@ This project embodies modern DevOps methodologies, utilizing Infrastructure as C
 ![Project Architecture Infographic](./project_architecture.png)
 
 ### 🖥️ Virtual Machine Inventory
-The entire virtualized environment is hosted across an internally routed subnet (`192.168.0.0/24`) consisting of the following purpose-built nodes:
+The entire virtualized environment is hosted across an internally routed subnet (`10.0.0.0/24`) consisting of the following purpose-built nodes:
 
 | Hostname | IP Address | Primary Role | Technical Stack |
 |----------|------------|--------------|-----------------|
-| `prdx-dprimary101` | `.58` | Internal BIND DNS Server | BIND9, Firewalld |
-| `prdx-haproxy101` | `.56` | L7 TCP/HTTP Load Balancer | HAProxy, Firewalld |
-| `prdx-webserver[1-3]` | `.53-.55` | Clustered Web Backends | Apache (httpd), Firewalld |
-| `prdx-db101` | `.60` | **Standalone** Database Primary | MariaDB (Percona/MySQL), Firewalld |
-| `prdx-kube101` | `.59` | Kubernetes (Kind) Cluster | Docker, Kind, Ingress-Nginx, Helm |
-| `prdx-nagios101` | `.57` | Health Monitoring Server | Nagios Core, NRPE |
+| `prdx-dprimary101` | `.239` | Internal BIND DNS Server | BIND9, Firewalld |
+| `prdx-haproxy101` | `.237` | L7 TCP/HTTP Load Balancer | HAProxy, Firewalld |
+| `prdx-webserver[1-3]` | `.234-.236` | Clustered Web Backends | Apache (httpd), Firewalld |
+| `prdx-db101` | `.233` | **Standalone** Database Primary | MariaDB (Percona/MySQL), Firewalld |
+| `prdx-kube101` | `.242` | Kubernetes (Kind) Cluster | Docker, Kind, Ingress-Nginx, Helm |
+| `prdx-nagios101` | `.238` | Health Monitoring Server | Nagios Core, NRPE |
 
 ---
 
@@ -29,8 +29,8 @@ The entire virtualized environment is hosted across an internally routed subnet 
 The repository is modularly broken down into distinct technological silos. Each folder contains its own isolated Ansible playbooks, Vagrant configurations, or Kubernetes manifests.
 
 ### 1. `dns/` (Internal Routing)
-Provides the foundational BIND Domain Name Services `project.local`. It configures forward and reverse zones to allow host-to-host communication via FQDN.
-*   **Role**: Authority for `project.local`
+Provides the foundational BIND Domain Name Services `finalproject.local`. It configures forward and reverse zones to allow host-to-host communication via FQDN.
+*   **Role**: Authority for `finalproject.local`
 *   **Deployment**: 
     ```bash
     ansible-playbook dns/dns_setup.yml
