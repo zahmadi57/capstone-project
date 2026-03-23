@@ -1,0 +1,45 @@
+---
+- name: Configure HAProxy Load Balancer
+  hosts: loadbalancers
+  become: yes
+  tasks:
+    - name: Ensure HAProxy and Firewalld are installed
+      ansible.builtin.package:
+        name:
+          - haproxy
+          - firewalld
+        state: present
+
+    - name: Start and Enable Firewalld
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: Allow HTTP (Port 80) in Firewall
+      ansible.posix.firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Deploy dynamic HAProxy configuration
+      ansible.builtin.template:
+        src: templates/haproxy.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart HAProxy
+
+    - name: Ensure HAProxy is running and enabled
+      ansible.builtin.service:
+        name: haproxy
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Restart HAProxy
+      ansible.builtin.service:
+        name: haproxy
+        state: restarted

@@ -1,0 +1,54 @@
+---
+- name: Configure Web Servers
+  hosts: webservers
+  become: yes
+
+  tasks:
+    - name: Ensure required packages are installed
+      ansible.builtin.package:
+        name:
+          - httpd
+          - firewalld
+        state: present
+
+    - name: Start and Enable Firewalld
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: Start and Enable Apache (httpd)
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Allow HTTP (Port 80) in Firewall
+      ansible.posix.firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Copy CSS, JS, and image assets to Apache document root
+      ansible.builtin.copy:
+        src: files/freelancer_theme/
+        dest: /var/www/html/
+        owner: apache
+        group: apache
+        mode: "0755"
+
+    - name: Deploy dynamic index HTTP template
+      ansible.builtin.template:
+        src: templates/index.html.j2
+        dest: /var/www/html/index.html
+        owner: apache
+        group: apache
+        mode: "0644"
+      notify: Restart Apache
+
+  handlers:
+    - name: Restart Apache
+      ansible.builtin.service:
+        name: httpd
+        state: restarted

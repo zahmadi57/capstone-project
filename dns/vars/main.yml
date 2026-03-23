@@ -1,0 +1,8 @@
+# DNS Global Configuration Variables
+# These variables control the zone creation and deployment in the dns playbooks
+
+# The primary forward lookup domain name
+domain_name: "finalproject.local"
+
+# The reverse lookup zone network (e.g., if IPs are 192.168.0.x, use "0.168.192.in-addr.arpa")
+reverse_zone_network: "0.0.10.in-addr.arpa"

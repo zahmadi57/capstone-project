@@ -1,0 +1,77 @@
+---
+- name: Provision Kind Kubernetes Cluster
+  hosts: kubernetes_servers
+  become: yes
+  vars:
+    kubectl_version: "v1.35.2"
+    kind_version: "v0.31.0"
+    helm_version: "v4.1.1"
+  tasks:
+    - name: Download and install kubectl
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Ensure firewalld is installed and running
+      ansible.builtin.package:
+        name: firewalld
+        state: present
+
+    - name: Start and enable firewalld
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: Open HTTP and HTTPS ports in firewalld
+      ansible.builtin.firewalld:
+        port: "{{ item }}/tcp"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop:
+        - 80
+        - 443
+
+    - name: Download and install kind
+      ansible.builtin.get_url:
+        url: "https://kind.sigs.k8s.io/dl/{{ kind_version }}/kind-linux-amd64"
+        dest: /usr/local/bin/kind
+        mode: '0755'
+
+    - name: Download helm
+      ansible.builtin.unarchive:
+        src: "https://get.helm.sh/helm-{{ helm_version }}-linux-amd64.tar.gz"
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Install helm binary
+      ansible.builtin.copy:
+        src: "/tmp/linux-amd64/helm"
+        dest: "/usr/local/bin/helm"
+        mode: '0755'
+        remote_src: yes
+
+    - name: Create kind config directory
+      ansible.builtin.file:
+        path: /etc/kind
+        state: directory
+        mode: '0755'
+
+    - name: Deploy kind cluster configuration
+      ansible.builtin.copy:
+        src: files/kind-config.yaml
+        dest: /etc/kind/kind-config.yaml
+        mode: '0644'
+
+    - name: Check if Kind cluster exists
+      ansible.builtin.command: /usr/local/bin/kind get clusters
+      register: kind_clusters
+      changed_when: false
+      become: false
+
+    - name: Create Kind cluster
+      ansible.builtin.command: /usr/local/bin/kind create cluster --name local-cluster --config /etc/kind/kind-config.yaml
+      when: "'local-cluster' not in kind_clusters.stdout"
+      become: false

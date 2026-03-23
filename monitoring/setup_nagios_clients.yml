@@ -1,0 +1,78 @@
+---
+- name: Setup Nagios Clients (NRPE & Firewall)
+  hosts: all:!nagios_servers
+  become: yes
+
+  pre_tasks:
+    - name: Ensure facts are gathered for the Nagios server
+      ansible.builtin.setup:
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ groups['nagios_servers'] }}"
+
+  tasks:
+    - name: Install EPEL Release
+      ansible.builtin.package:
+        name: epel-release
+        state: present
+
+    - name: Install NRPE, Firewalld and Plugins
+      ansible.builtin.package:
+        name:
+          - nrpe
+          - firewalld
+          - nagios-plugins-ping
+          - nagios-plugins-disk
+          - nagios-plugins-users
+          - nagios-plugins-procs
+          - nagios-plugins-load
+          - nagios-plugins-swap
+        state: present
+
+    - name: Start Firewalld Service
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: Allow Nagios Server IP in NRPE
+      ansible.builtin.lineinfile:
+        path: /etc/nagios/nrpe.cfg
+        regexp: "^allowed_hosts="
+        line: 'allowed_hosts=127.0.0.1,{{ groups["nagios_servers"] | map("extract", hostvars) | map(attribute="ansible_default_ipv4.address") | default(groups["nagios_servers"]) | join(",") }}'
+
+    - name: Create Custom NRPE Command Definitions
+      ansible.builtin.template:
+        src: templates/ansible_commands.cfg.j2
+        dest: /etc/nrpe.d/ansible_commands.cfg
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Restart NRPE
+
+    - name: Ensure NRPE includes the nrpe.d directory
+      ansible.builtin.lineinfile:
+        path: /etc/nagios/nrpe.cfg
+        regexp: "^#?include_dir=/etc/nrpe.d/"
+        line: "include_dir=/etc/nrpe.d/"
+        state: present
+
+    - name: Enable and Start NRPE
+      ansible.builtin.service:
+        name: nrpe
+        state: started
+        enabled: yes
+
+    - name: Open Firewall Port 5666 for NRPE
+      ansible.posix.firewalld:
+        port: 5666/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+      ignore_errors: yes
+
+  handlers:
+    - name: Restart NRPE
+      ansible.builtin.service:
+        name: nrpe
+        state: restarted

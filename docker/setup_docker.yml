@@ -1,0 +1,48 @@
+---
+- name: Install and Configure Docker
+  hosts: docker_servers
+  become: yes
+  tasks:
+    - name: Ensure required dependencies are installed
+      ansible.builtin.package:
+        name:
+          - yum-utils
+        state: present
+
+    - name: Add Docker CE repository
+      ansible.builtin.command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo
+
+    - name: Install Docker CE packages
+      ansible.builtin.package:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    - name: Start and Enable Docker service
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Ensure HTTP/HTTPS traffic is allowed through firewall (if applicable)
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      loop:
+        - http
+        - https
+      ignore_errors: yes
+
+    - name: Add ansible user to docker group
+      ansible.builtin.user:
+        name: ansible
+        groups: docker
+        append: yes 

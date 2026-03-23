@@ -1,0 +1,159 @@
+---
+- name: Install and Configure Nagios Server
+  hosts: nagios_servers
+  become: yes
+  vars:
+    nagios_conf_dir: /etc/nagios
+    nagios_log_dir: /var/log/nagios
+    nagios_user: nagios
+    nagios_group: nagios
+    apache_user: apache
+    status_file: "{{ nagios_log_dir }}/status.dat"
+    objects_file: "{{ nagios_log_dir }}/objects.cache"
+    nagios_admin_pass: "admin"
+
+  tasks:
+    - name: Install EPEL Release
+      ansible.builtin.package:
+        name: epel-release
+        state: present
+
+    - name: Enable CRB (Code Ready Builder)
+      ansible.builtin.command: "crb enable"
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Install Nagios Core, Plugins, and Dependencies
+      ansible.builtin.package:
+        name:
+          - nagios
+          - httpd
+          - httpd-tools
+          - python3-libsemanage
+          - nrpe
+          - firewalld
+          - python3-passlib
+          - nagios-plugins-ping
+          - nagios-plugins-disk
+          - nagios-plugins-users
+          - nagios-plugins-procs
+          - nagios-plugins-load
+          - nagios-plugins-ssh
+          - nagios-plugins-http
+          - nagios-plugins-nrpe
+          - nagios-plugins-swap
+          - nagios-plugins-dns
+          - nagios-plugins-tcp
+        state: present
+
+    - name: Add Apache to Nagios Group
+      ansible.builtin.user:
+        name: "{{ apache_user }}"
+        groups: "{{ nagios_group }}"
+        append: yes
+
+    - name: Create Nagios Log Directory
+      ansible.builtin.file:
+        path: "{{ nagios_log_dir }}"
+        state: directory
+        owner: "{{ nagios_user }}"
+        group: "{{ nagios_group }}"
+        mode: "0775"
+
+    - name: Create Nagios RW Directory
+      ansible.builtin.file:
+        path: "{{ nagios_log_dir }}/rw"
+        state: directory
+        owner: "{{ nagios_user }}"
+        group: "{{ nagios_group }}"
+        mode: "2770"
+
+    - name: Force status_file path in nagios.cfg
+      ansible.builtin.lineinfile:
+        path: "{{ nagios_conf_dir }}/nagios.cfg"
+        regexp: "^status_file="
+        line: "status_file={{ status_file }}"
+
+    - name: Force object_cache_file path in nagios.cfg
+      ansible.builtin.lineinfile:
+        path: "{{ nagios_conf_dir }}/nagios.cfg"
+        regexp: "^object_cache_file="
+        line: "object_cache_file={{ objects_file }}"
+
+    - name: Enable External Commands
+      ansible.builtin.lineinfile:
+        path: "{{ nagios_conf_dir }}/nagios.cfg"
+        regexp: "^check_external_commands="
+        line: "check_external_commands=1"
+
+    - name: Create nagiosadmin HTTP user
+      community.general.htpasswd:
+        path: /etc/nagios/passwd
+        name: nagiosadmin
+        password: "{{ nagios_admin_pass }}"
+        owner: root
+        group: "{{ apache_user }}"
+        mode: "0640"
+        create: yes
+      ignore_errors: yes
+
+    - name: Create conf.d directory
+      ansible.builtin.file:
+        path: "{{ nagios_conf_dir }}/conf.d"
+        state: directory
+        owner: root
+        group: "{{ nagios_group }}"
+        mode: "0755"
+
+    - name: Tell nagios.cfg to look in conf.d
+      ansible.builtin.lineinfile:
+        path: "{{ nagios_conf_dir }}/nagios.cfg"
+        regexp: "^#?cfg_dir={{ nagios_conf_dir }}/conf.d"
+        line: "cfg_dir={{ nagios_conf_dir }}/conf.d"
+
+    - name: Deploy commands_nrpe.cfg template
+      ansible.builtin.template:
+        src: templates/commands_nrpe.cfg.j2
+        dest: "{{ nagios_conf_dir }}/conf.d/commands_nrpe.cfg"
+        owner: root
+        group: "{{ nagios_group }}"
+        mode: "0640"
+
+    - name: Deploy dynamic servers.cfg template
+      ansible.builtin.template:
+        src: templates/servers.cfg.j2
+        dest: "{{ nagios_conf_dir }}/conf.d/servers.cfg"
+        owner: root
+        group: "{{ nagios_group }}"
+        mode: "0640"
+      notify: Restart Nagios
+
+    - name: Open Firewall Port 80 for HTTP
+      ansible.posix.firewalld:
+        port: 80/tcp
+        permanent: yes
+        state: enabled
+        immediate: yes
+      ignore_errors: yes
+
+    - name: Check Nagios Config Validity
+      ansible.builtin.command: nagios -v {{ nagios_conf_dir }}/nagios.cfg
+      register: config_check
+      failed_when: config_check.rc != 0
+      changed_when: false
+
+    - name: Start and Enable Services
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - httpd
+        - nagios
+        - firewalld
+
+  handlers:
+    - name: Restart Nagios
+      ansible.builtin.service:
+        name: nagios
+        state: restarted

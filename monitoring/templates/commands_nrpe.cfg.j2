@@ -1,0 +1,14 @@
+define command {
+    command_name    check_nrpe
+    command_line    $USER1$/check_nrpe -H $HOSTADDRESS$ -c $ARG1$
+}
+
+define command {
+    command_name    check_dns_custom
+    command_line    $USER1$/check_dns -H www.google.com -s $HOSTADDRESS$
+}
+
+define command {
+    command_name    check_tcp_custom
+    command_line    $USER1$/check_tcp -H $HOSTADDRESS$ -p $ARG1$
+}

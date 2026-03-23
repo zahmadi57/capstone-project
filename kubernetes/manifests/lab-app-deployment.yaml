@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lab-app-deployment
+  labels:
+    app: lab-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lab-app
+  template:
+    metadata:
+      labels:
+        app: lab-app
+    spec:
+      volumes:
+      - name: web-content
+        emptyDir: {}
+      initContainers:
+      - name: init-html
+        image: busybox
+        command: ['sh', '-c', 'echo "<h1>Served by: ${HOSTNAME}</h1>" > /web/index.html']
+        volumeMounts:
+        - name: web-content
+          mountPath: /web
+      containers:
+      - name: lab-app-container
+        # Once the custom Dockerfile is pushed to a remote registry, you can update this to your private image.
+        image: nginxinc/nginx-unprivileged:alpine
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: web-content
+          mountPath: /usr/share/nginx/html
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"

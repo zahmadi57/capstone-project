@@ -1,0 +1,46 @@
+---
+- name: Setup Database Server
+  hosts: db_servers
+  become: yes
+  tasks:
+    - name: Ensure MariaDB and required python MySQL library are installed
+      package:
+        name:
+          - mariadb-server
+          - python3-PyMySQL
+          - firewalld
+        state: present
+
+    - name: Start and Enable Firewalld
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: Allow MySQL service in firewall
+      firewalld:
+        service: mysql
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Ensure MariaDB is started and enabled
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+
+    - name: Copy SQL initialization script to DB Server
+      copy:
+        src: init_students.sql
+        dest: /tmp/init_students.sql
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Execute the SQL initialization script
+      community.mysql.mysql_db:
+        name: all
+        state: import
+        target: /tmp/init_students.sql
+        login_unix_socket: /var/lib/mysql/mysql.sock

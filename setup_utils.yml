@@ -1,0 +1,24 @@
+---
+- name: Install Common Utilities
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure required utility packages are installed
+      ansible.builtin.package:
+        name:
+          - bind-utils
+          - man
+          - man-pages
+          - mlocate
+          - sysstat
+        state: present
+
+    - name: Permanently disable SELinux
+      ansible.posix.selinux:
+        state: disabled
+        policy: targeted
+
+    - name: Temporarily set SELinux to permissive (if currently enforcing)
+      ansible.builtin.command: setenforce 0
+      failed_when: false
+      changed_when: false

@@ -1,0 +1,74 @@
+---
+- name: Setup DNS Server
+  hosts: dns_servers
+  become: yes
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: Install Bind (named) and firewalld
+      ansible.builtin.package:
+        name: 
+          - bind
+          - bind-utils
+          - firewalld
+        state: present
+
+    - name: Ensure firewalld is running
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: yes
+
+    - name: Allow DNS service in firewall
+      ansible.posix.firewalld:
+        service: dns
+        permanent: yes
+        state: enabled
+        immediate: yes
+
+    - name: Deploy named.conf template
+      ansible.builtin.template:
+        src: templates/named.conf.j2
+        dest: /etc/named.conf
+        owner: root
+        group: named
+        mode: "0640"
+      notify: Restart Named
+
+    - name: Deploy forward zone file
+      ansible.builtin.template:
+        src: templates/forward_zone.j2
+        dest: "/var/named/{{ domain_name }}.flz"
+        owner: named
+        group: named
+        mode: "0640"
+      notify: Restart Named
+
+    - name: Deploy reverse zone file
+      ansible.builtin.template:
+        src: templates/reverse_zone.j2
+        dest: "/var/named/{{ domain_name }}.rlz"
+        owner: named
+        group: named
+        mode: "0640"
+      notify: Restart Named
+
+    - name: Check/Validate if forward zone exists
+      ansible.builtin.command: named-checkzone {{ domain_name }} /var/named/{{ domain_name }}.flz
+      changed_when: false
+
+    - name: Check/Validate if reverse zone exists
+      ansible.builtin.command: named-checkzone {{ reverse_zone_network }} /var/named/{{ domain_name }}.rlz
+      changed_when: false
+
+    - name: Ensure named service is running and enabled
+      ansible.builtin.service:
+        name: named
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Restart Named
+      ansible.builtin.service:
+        name: named
+        state: restarted

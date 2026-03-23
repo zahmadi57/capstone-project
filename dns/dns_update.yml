@@ -1,0 +1,32 @@
+---
+- name: Update DNS Records
+  hosts: dns_servers
+  become: yes
+  vars_files:
+    - dns_hosts.yml
+    - vars/main.yml
+  tasks:
+    - name: Add A record to forward zone
+      ansible.builtin.lineinfile:
+        path: "/var/named/{{ domain_name }}.flz"
+        regexp: '^{{ item.host }}\s+IN\s+A\s+'
+        line: "{{ item.host }} IN A {{ item.ip }}"
+        insertafter: EOF
+      loop: "{{ dns_records }}"
+      notify: Reload Named
+
+    - name: Add PTR record to reverse zone
+      ansible.builtin.lineinfile:
+        path: "/var/named/{{ domain_name }}.rlz"
+        regexp: '^{{ item.ip.split(".")[-1] }}\s+IN\s+PTR\s+'
+        line: "{{ item.ip.split('.')[-1] }} IN PTR {{ item.host }}.{{ domain_name }}."
+        insertafter: EOF
+      loop: "{{ dns_records }}"
+      when: item.ip.split('.') | length == 4
+      notify: Reload Named
+
+  handlers:
+    - name: Reload Named
+      service:
+        name: named
+        state: reloaded

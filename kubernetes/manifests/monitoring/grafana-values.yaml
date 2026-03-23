@@ -1,0 +1,29 @@
+# kubernetes/manifests/monitoring/grafana-values.yaml
+
+# Disable persistent storage for the Grafana pod
+# In a production environment, this should be true so dashboards survive restarts.
+# In a local 'kind' lab environment, false prevents provisioning issues.
+grafana:
+  persistence:
+    enabled: false
+  
+  # Set a simple, static password for the admin user to avoid needing to
+  # extract dynamically generated secrets from Kubernetes during lab exercises.
+  adminPassword: "admin"
+
+# Disable Alertmanager to save RAM (not needed for basic lab visualization)
+alertmanager:
+  enabled: false
+
+# Configure Prometheus settings to save memory in the local lab
+prometheus:
+  prometheusSpec:
+    # Reduce how long metrics are kept before being deleted
+    retention: 2d
+    
+    # Minimize resource utilization
+    resources:
+      requests:
+        memory: 400Mi
+      limits:
+        memory: 800Mi

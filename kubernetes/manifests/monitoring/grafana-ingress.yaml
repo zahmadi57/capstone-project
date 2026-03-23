@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-ingress
+  namespace: monitoring
+  annotations:
+    # Grafana serves requests from its root, no rewriting needed.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+spec:
+  rules:
+  # Host-based routing: NGINX matches the DNS hostname and forwards to Grafana.
+  # DNS record: grafana.project.local -> 192.168.0.59 (prdx-kube101)
+  - host: grafana.finalproject.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kube-prometheus-stack-grafana
+            port:
+              number: 80

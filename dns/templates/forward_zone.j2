@@ -1,0 +1,12 @@
+$TTL 86400
+@   IN  SOA     prdx-dns101.{{ domain_name }}. root.{{ domain_name }}. (
+                      2026030401 ;Serial
+                      3600       ;Refresh
+                      1800       ;Retry
+                      604800     ;Expire
+                      86400      ;Minimum TTL
+)
+@       IN  NS      prdx-dns101.{{ domain_name }}.
+@       IN  A       10.0.0.231
+prdx-dns101 IN  A       10.0.0.231
+dnsserver IN  CNAME   prdx-dns101.{{ domain_name }}.

@@ -1,0 +1,26 @@
+# Use Rocky Linux 9 as the base image for a standard RHEL-like environment
+FROM rockylinux:9
+
+# Install required packages per instructions.
+# Note: 'php-mysql' is obsolete in EL9, so 'php-mysqlnd' is used to provide the same functionality.
+RUN dnf install -y httpd php mysql php-mysqlnd tar gzip && \
+    dnf clean all
+
+# Ensure Apache is running in the background isn't something we do in the Dockerfile run step,
+# we handle it via the CMD instruction at the end so it stays running for the container lifecycle.
+
+# We use the local tarball downloaded into the docker/ directory.
+# Docker's 'ADD' instruction automatically extracts local tarballs.
+ADD lab-app.tgz /var/www/html/
+
+# Update ownership of the specific config file per the task requirement
+RUN chown apache:root /var/www/html/rds.conf.php
+
+# Expose HTTP port
+EXPOSE 80
+
+# Start the Apache daemon in the foreground so the container doesn't exit immediately
+# NOTE: This image will return a 503 Service Unavailable for PHP files because
+# Rocky Linux 9 requires php-fpm to run as a secondary background daemon alongside httpd,
+# which Docker does not natively support without a multi-process manager like supervisord.
+CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]

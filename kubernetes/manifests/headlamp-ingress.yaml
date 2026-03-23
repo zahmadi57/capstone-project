@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: headlamp-ingress
+  namespace: kube-system
+  annotations:
+    # Headlamp serves its own frontend, so no path rewriting is needed.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  rules:
+  # Host-based routing: NGINX matches the DNS hostname and forwards to Headlamp.
+  # DNS record: headlamp.project.local -> 192.168.0.59 (prdx-kube101)
+  - host: headlamp.project.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: headlamp
+            port:
+              number: 80
