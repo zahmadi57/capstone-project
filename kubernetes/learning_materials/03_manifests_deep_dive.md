@@ -185,7 +185,7 @@ The **Ingress Controller** acts as our smart traffic router. This manifest forms
 9:   - http:
 ```
 
-- **Lines 7-9**: This is where we define the **Host-Based Routing** rule. By specifying `host: app.project.local`, we tell the Ingress Controller to ONLY trigger this rule if the incoming request matches this exact domain name.
+- **Lines 7-9**: This is where we define the **Host-Based Routing** rule. By specifying `host: app.finalproject.local`, we tell the Ingress Controller to ONLY trigger this rule if the incoming request matches this exact domain name.
 
 ```yaml
 10:       paths:
