@@ -12,7 +12,7 @@ Before looking at the code, let's look at the "big picture" of what happens when
 
 ![Ansible to Kind Provisioning Flow](./images/ansible_kind_provisioning.png)
 
-1. **Ansible (The Builder):** Sitting on the `192.168.0.11` control node, Ansible logs into the target Rocky Linux Virtual Machine via SSH.
+1. **Ansible (The Builder):** Sitting on the `10.0.0.232` control node, Ansible logs into the target Rocky Linux Virtual Machine via SSH.
 2. **The Tools:** It downloads two critical binaries: `kubectl` (your remote control for Kubernetes) and `kind` (the engine that builds the cluster).
 3. **The `kind` Engine:** Ansible runs the `kind create cluster` command.
 4. **Docker (The Container):** `kind` doesn't install Kubernetes directly onto the Linux Operating System. Instead, it downloads a massive Docker image and boots a container named `kind-control-plane`. *This container acts as a simulated, virtual server*. Kubernetes runs entirely inside this isolated box.

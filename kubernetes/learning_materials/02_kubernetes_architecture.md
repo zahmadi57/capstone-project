@@ -17,7 +17,7 @@ The following diagram illustrates the complete infrastructure stack, starting fr
 ### 1. The Virtual Machine & Docker Bridge
 As established in **Lesson 1**, Kubernetes (via `kind`) does not run directly on the Linux Host OS. It boots a massive Docker container. 
 
-We used the `kind-config.yaml` file's `extraPortMappings` to force Docker to drill a pipe through its isolated firewall. This means any traffic that hits the Virtual Machine's IP address (192.168.0.59) on Port 80 is instantly piped directly into the `kind` Docker container on Port 80.
+We used the `kind-config.yaml` file's `extraPortMappings` to force Docker to drill a pipe through its isolated firewall. This means any traffic that hits the Virtual Machine's IP address (10.0.0.242) on Port 80 is instantly piped directly into the `kind` Docker container on Port 80.
 
 *But what happens once the traffic crosses that bridge and is officially inside the Kubernetes cluster?*
 
@@ -25,9 +25,9 @@ We used the `kind-config.yaml` file's `extraPortMappings` to force Docker to dri
 Once the traffic is piped inside the cluster on Port 80, it hits the **Ingress Controller**.
 
 Think of the Ingress Controller as a highly intelligent traffic cop standing at the cluster's single front door. It reads the HTTP `Host:` header on every incoming packet — the hostname your DNS server resolved.
-* A request for `app.project.local` gets routed to the Lab App Service.
-* A request for `headlamp.project.local` gets routed to the Headlamp Dashboard Service.
-* A request for `grafana.project.local` gets routed to the Grafana Service in the `monitoring` namespace.
+* A request for `app.finalproject.local` gets routed to the Lab App Service.
+* A request for `headlamp.finalproject.local` gets routed to the Headlamp Dashboard Service.
+* A request for `grafana.finalproject.local` gets routed to the Grafana Service in the `monitoring` namespace.
 
 This is **host-based routing** — the production-grade pattern used by every cloud provider. A single Ingress Controller on Port 80 handles an unlimited number of applications by inspecting the hostname, completely eliminating the need for per-app NodePorts.
 

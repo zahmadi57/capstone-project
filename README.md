@@ -86,7 +86,7 @@ The modern, declarative microservices stack. This module spins up a `kind` local
 
 ## ⚙️ Global Prerequisites
 
-All configuration is managed from the `prdx-ansible101` (`.11`) Control Node. To normalize the environment (users, dependencies, timezone), run:
+All configuration is managed from the `prdx-ansible101` (`.232`) Control Node. To normalize the environment (users, dependencies, timezone), run:
 
 ```bash
 ansible-playbook setup_utils.yml
