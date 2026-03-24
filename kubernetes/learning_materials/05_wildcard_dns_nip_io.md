@@ -1,9 +1,9 @@
 # 🌐 Lesson 5: Zero-Config Access with nip.io
 
 ## The Problem: The "DNS Gap"
-In a lab environment, your Kubernetes cluster runs on a virtual network (e.g., `192.168.0.0/24`). You use **Ingress** to host multiple applications (Headlamp, App, Grafana) on a single IP address (`192.168.0.59`).
+In a lab environment, your Kubernetes cluster runs on a virtual network (e.g., `192.168.0.0/24`). You use **Ingress** to host multiple applications (Headlamp, App, Grafana) on a single IP address (`10.0.0.242`).
 
-The Ingress Controller relies on the **`Host` header** in your HTTP request to know which pod to send you to. However, your local Windows/macOS machine doesn't know that `app.project.local` points to `192.168.0.59`.
+The Ingress Controller relies on the **`Host` header** in your HTTP request to know which pod to send you to. However, your local Windows/macOS machine doesn't know that `app.finalproject.local` points to `10.0.0.242`.
 
 ### Common Solutions:
 1.  **VPN/Network DNS**: Hard to set up for simple labs.
@@ -19,9 +19,9 @@ The Ingress Controller relies on the **`Host` header** in your HTTP request to k
 `<anything>.<IP-Address>.nip.io`
 
 **The Resolution:**
-When you type `headlamp.192.168.0.59.nip.io`:
+When you type `headlamp.10.0.0.242.nip.io`:
 1.  Your browser asks the internet for the IP.
-2.  The `nip.io` server sees `192.168.0.59` in the string.
+2.  The `nip.io` server sees `10.0.0.242` in the string.
 3.  It responds to your browser with exactly that IP.
 
 ---
@@ -37,13 +37,13 @@ Edit your `.yaml` files in `kubernetes/manifests/` and change the `host` field:
 # Before (Requires Hosts File)
 spec:
   rules:
-  - host: app.project.local
+  - host: app.finalproject.local
     http: ...
 
 # After (Zero-Config)
 spec:
   rules:
-  - host: app.192.168.0.59.nip.io
+  - host: app.10.0.0.242.nip.io
     http: ...
 ```
 
@@ -53,7 +53,7 @@ kubectl apply -f kubernetes/manifests/lab-app-ingress.yaml
 ```
 
 ### 3. Immediate Access
-You can now visit `http://app.192.168.0.59.nip.io` from any machine on your network. No hosts file editing required.
+You can now visit `http://app.10.0.0.242.nip.io` from any machine on your network. No hosts file editing required.
 
 ---
 
