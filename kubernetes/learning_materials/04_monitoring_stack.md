@@ -19,7 +19,7 @@ Take a look at the infographic below. It illustrates the different components of
 In this project, we utilize a **Two-Tier Monitoring** strategy to ensure full visibility into both the physical infrastructure and the virtual applications.
 
 ### Tier 1: External Host Monitoring (Nagios)
-The **Nagios** server (`192.168.0.58`) sits outside the Kubernetes cluster. Its job is to monitor the **Host Operating Systems**. 
+The **Nagios** server (`10.0.0.238`) sits outside the Kubernetes cluster. Its job is to monitor the **Host Operating Systems**. 
 - It uses **NRPE** to check the health of the `prdx-kube101` VM itself (CPU, Disk Space, Memory).
 - **Crucial Note:** Nagios does not look inside the Kubernetes cluster. It only cares if the VM is up and the Docker engine is running.
 
@@ -53,13 +53,13 @@ In **Lesson 1**, we learned how only Ports 80 and 443 are mapped through the Doc
 
 For the Monitoring Stack, rather than using temporary `kubectl port-forward` tunnels, we deploy **Ingress resources** in the `monitoring` namespace, just like we did for the Lab Application. This means:
 
-- Browse to `http://grafana.project.local` → NGINX Ingress → Grafana Service
-- Browse to `http://prometheus.project.local` → NGINX Ingress → Prometheus Service
+- Browse to `http://grafana.finalproject.local` → NGINX Ingress → Grafana Service
+- Browse to `http://prometheus.finalproject.local` → NGINX Ingress → Prometheus Service
 
 **How the DNS + Ingress combination works:**
 1. Your machine sends a DNS query for `grafana.project.local` to `prdx-dns101`.
-2. The DNS server returns `192.168.0.59` (the VM IP) — the exact same IP as the Lab App.
-3. Your browser sends an HTTP request to `192.168.0.59:80` with the `Host: grafana.project.local` header.
+2. The DNS server returns `10.0.0.242` (the VM IP) — the exact same IP as the Lab App.
+3. Your browser sends an HTTP request to `10.0.0.242:80` with the `Host: grafana.finalproject.local` header.
 4. NGINX Ingress reads the `Host:` header and routes the request to the `kube-prometheus-stack-grafana` service inside the `monitoring` namespace.
 
 This approach is **simpler, more permanent, and more production-like** than port-forwarding. There are no background terminal processes to maintain.
