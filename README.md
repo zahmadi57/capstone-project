@@ -1,6 +1,48 @@
 # 🚀 Enterprise DevOps Capstone Project
 
-Welcome to the central repository for the comprehensive Enterprise IT Infrastructure Capstone. This repository houses all the **Ansible** playbooks, configuration files, and declarative manifests required to fully automate and deploy a robust, highly-available Linux datacenter environment from scratch.
+This project demonstrates how I designed and automated a complete enterprise-style infrastructure using DevOps tools and Infrastructure as Code.
+
+It includes:
+- Automated server provisioning using Ansible
+- High availability web architecture with HAProxy
+- Monitoring with Nagios
+- Containerization with Docker
+- Kubernetes (Kind) cluster deployment
+- Modular infrastructure design
+
+The goal of this project was to simulate a real-world production environment and practice end-to-end infrastructure automation.
+
+---
+
+## 🛠️ Tech Stack
+
+- Ansible
+- Docker
+- Kubernetes (Kind)
+- HAProxy
+- Apache
+- MariaDB
+- Nagios
+- Linux (RHEL/CentOS)
+
+---
+
+## 📚 Key Learnings
+
+- Designed and deployed a multi-tier infrastructure
+- Automated system configuration using Ansible playbooks
+- Implemented load balancing and high availability
+- Built and managed containerized workloads
+- Deployed Kubernetes cluster using Kind
+- Configured centralized monitoring and alerting
+
+---
+
+## 🎯 Project Objective
+
+This repository contains all Ansible playbooks, configuration files, and manifests used to automate and deploy a highly available Linux-based infrastructure.
+
+The objective of this project is to design and automate a production-like environment that simulates real-world enterprise systems using DevOps best practices.
 
 ---
 
